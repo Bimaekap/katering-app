@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/firebase_service.dart';
 import 'package:flutter_application_1/login_page.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -111,11 +112,11 @@ class _RegisterPageState extends State<RegisterPage> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    String nama = namaController.text;
-                    String email = emailController.text;
-                    String phone = phoneController.text;
-                    String password = passwordController.text;
+                  onPressed: () async {
+                    String nama = namaController.text.trim();
+                    String email = emailController.text.trim();
+                    String phone = phoneController.text.trim();
+                    String password = passwordController.text.trim();
 
                     // VALIDASI INPUT
                     if (nama.isEmpty ||
@@ -130,22 +131,41 @@ class _RegisterPageState extends State<RegisterPage> {
                       return;
                     }
 
-                    // NOTIFIKASI BERHASIL
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Pendaftaran berhasil'),
-                      ),
+                    // ======= SIMPAN KE FIREBASE AUTH + FIRESTORE =======
+                    // FirebaseService.register() membuat akun di Auth
+                    // dan menyimpan dokumen di koleksi "users"
+                    final result = await FirebaseService.register(
+                      nama: nama,
+                      email: email,
+                      noHp: phone,
+                      password: password,
                     );
 
-                    // PINDAH KE HALAMAN LOGIN
-                    Future.delayed(const Duration(milliseconds: 800), () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginPage(),
+                    if (!mounted) return;
+
+                    if (result['success'] == true) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Pendaftaran berhasil'),
                         ),
                       );
-                    });
+                      Future.delayed(const Duration(milliseconds: 800), () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginPage(),
+                          ),
+                        );
+                      });
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content:
+                              Text(result['message'] ?? 'Pendaftaran gagal'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2340C7),

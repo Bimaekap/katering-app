@@ -1,36 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
-// ================= DATA NOTIFIKASI USER =================
-class NotificationService {
-  static List<Map<String, String>> notifications = [];
-
-  static void addNotification({
-    required String title,
-    required String message,
-  }) {
-    notifications.insert(0, {
-      "title": title,
-      "message": message,
-      "time": DateTime.now().toString(),
-    });
-  }
-}
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: KelolaPembatalanPage(),
-    );
-  }
-}
+import 'firebase_service.dart';
 
 class KelolaPembatalanPage extends StatefulWidget {
   const KelolaPembatalanPage({super.key});
@@ -41,115 +11,14 @@ class KelolaPembatalanPage extends StatefulWidget {
 
 class _KelolaPembatalanPageState extends State<KelolaPembatalanPage> {
   final TextEditingController searchController = TextEditingController();
-
   final ScrollController horizontalController = ScrollController();
-
-  final List<Map<String, dynamic>> dataPembatalan = [
-    {
-      "no": "1.",
-      "id": "ORD006",
-      "nama": "Marlina",
-      "hp": "08212121121",
-      "tanggal": "20-03-2026",
-      "alasan": "Acara keluarga dibatalkan",
-      "status": "pending",
-    },
-    {
-      "no": "2.",
-      "id": "ORD007",
-      "nama": "Mina",
-      "hp": "08212121129",
-      "tanggal": "18-03-2026",
-      "alasan": "Pesanan salah menu",
-      "status": "ditolak",
-    },
-    {
-      "no": "3.",
-      "id": "ORD008",
-      "nama": "Intan",
-      "hp": "08212121123",
-      "tanggal": "19-03-2026",
-      "alasan": "Lokasi acara berubah",
-      "status": "disetujui",
-    },
-    {
-      "no": "4.",
-      "id": "ORD009",
-      "nama": "Joko",
-      "hp": "08212121125",
-      "tanggal": "20-03-2026",
-      "alasan": "Jumlah tamu berkurang",
-      "status": "disetujui",
-    },
-  ];
-
-  List<Map<String, dynamic>> filteredData = [];
-
-  @override
-  void initState() {
-    super.initState();
-
-    // DATA AWAL LANGSUNG MUNCUL
-    filteredData = List.from(dataPembatalan);
-  }
+  String searchQuery = '';
 
   @override
   void dispose() {
     horizontalController.dispose();
     searchController.dispose();
     super.dispose();
-  }
-
-  void searchData(String keyword) {
-    setState(() {
-      filteredData = dataPembatalan.where((item) {
-        final nama = item['nama'].toString().toLowerCase();
-        final id = item['id'].toString().toLowerCase();
-        final input = keyword.toLowerCase();
-
-        return nama.contains(input) || id.contains(input);
-      }).toList();
-    });
-  }
-
-  void approveCancellation(int index) {
-    setState(() {
-      filteredData[index]['status'] = "disetujui";
-    });
-
-    NotificationService.addNotification(
-      title: "Pembatalan Disetujui",
-      message:
-          "Permintaan pembatalan pesanan ${filteredData[index]['id']} telah disetujui admin.",
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          "Pembatalan berhasil disetujui & notifikasi dikirim ke user",
-        ),
-      ),
-    );
-  }
-
-  void rejectCancellation(int index) {
-    setState(() {
-      filteredData[index]['status'] = "ditolak";
-    });
-
-    NotificationService.addNotification(
-      title: "Pembatalan Ditolak",
-      message:
-          "Permintaan pembatalan pesanan ${filteredData[index]['id']} ditolak admin.",
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          "Pembatalan berhasil ditolak & notifikasi dikirim ke user",
-        ),
-      ),
-    );
   }
 
   @override
@@ -163,156 +32,77 @@ class _KelolaPembatalanPageState extends State<KelolaPembatalanPage> {
             children: [
               // ================= HEADER =================
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xffD9E1E5),
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                decoration: BoxDecoration(color: const Color(0xffD9E1E5), borderRadius: BorderRadius.circular(10)),
                 child: Row(
                   children: [
                     GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Icon(
-                        Icons.arrow_back_ios_new,
-                        size: 18,
-                        color: Colors.black54,
-                      ),
+                      onTap: () => Navigator.pop(context),
+                      child: const Icon(Icons.arrow_back_ios_new, size: 18, color: Colors.black54),
                     ),
-
                     const SizedBox(width: 8),
-
                     const Expanded(
-                      child: Text(
-                        "Ridu Sianturi\nCatering",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xff2144D0),
-                        ),
-                      ),
+                      child: Text("Ridu Sianturi\nCatering",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xff2144D0))),
                     ),
-
-                    // FOTO ADMIN
                     Column(
                       children: [
                         Container(
-                          height: 38,
-                          width: 38,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                          height: 38, width: 38,
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(10),
-                            child: Image.asset(
-                              "assets/gambar_logo.png",
-                              fit: BoxFit.cover,
-                              errorBuilder: (
-                                context,
-                                error,
-                                stackTrace,
-                              ) {
-                                return const Icon(
-                                  Icons.image_not_supported,
-                                  size: 18,
-                                  color: Colors.grey,
-                                );
-                              },
-                            ),
+                            child: Image.asset("assets/gambar_logo.png", fit: BoxFit.cover,
+                                errorBuilder: (c, e, s) => const Icon(Icons.image_not_supported, size: 18, color: Colors.grey)),
                           ),
                         ),
                         const SizedBox(height: 3),
-                        const Text(
-                          "Admin",
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black54,
-                          ),
-                        )
+                        const Text("Admin", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.black54)),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
 
               const SizedBox(height: 10),
 
-              // ================= BREADCRUMB =================
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xffD9E1E5),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text(
-                  "Admin / Mengelola Pembatalan",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(color: const Color(0xffD9E1E5), borderRadius: BorderRadius.circular(10)),
+                child: const Text("Admin / Mengelola Pembatalan",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
               ),
 
               const SizedBox(height: 10),
 
               // ================= SEARCH =================
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 40,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: const Color(0xff2144D0),
-                          width: 1.5,
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: searchController,
-                              onChanged: (value) {
-                                searchData(value);
-                              },
-                              style: const TextStyle(
-                                fontSize: 11,
-                              ),
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                hintText: "Cari Nama/ID",
-                              ),
-                            ),
-                          ),
-                          const Icon(
-                            Icons.search,
-                            size: 18,
-                          ),
-                        ],
+              Container(
+                height: 40,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xff2144D0), width: 1.5),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: searchController,
+                        onChanged: (v) => setState(() => searchQuery = v),
+                        style: const TextStyle(fontSize: 11),
+                        decoration: const InputDecoration(border: InputBorder.none, hintText: "Cari Nama/ID"),
                       ),
                     ),
-                  ),
-                ],
+                    const Icon(Icons.search, size: 18),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 10),
 
-              // ================= TABLE =================
+              // ================= TABLE (FIRESTORE REALTIME) =================
               Expanded(
                 child: Scrollbar(
                   controller: horizontalController,
@@ -326,45 +116,17 @@ class _KelolaPembatalanPageState extends State<KelolaPembatalanPage> {
                         children: [
                           // HEADER TABLE
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xffD9E1E5),
-                              borderRadius: BorderRadius.circular(
-                                10,
-                              ),
-                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(color: const Color(0xffD9E1E5), borderRadius: BorderRadius.circular(10)),
                             child: const Row(
                               children: [
-                                TableHeader(
-                                  title: "No",
-                                  width: 40,
-                                ),
-                                TableHeader(
-                                  title: "ID",
-                                  width: 70,
-                                ),
-                                TableHeader(
-                                  title: "Pelanggan",
-                                  width: 120,
-                                ),
-                                TableHeader(
-                                  title: "Tanggal",
-                                  width: 90,
-                                ),
-                                TableHeader(
-                                  title: "Alasan",
-                                  width: 180,
-                                ),
-                                TableHeader(
-                                  title: "Status",
-                                  width: 100,
-                                ),
-                                TableHeader(
-                                  title: "Aksi",
-                                  width: 160,
-                                ),
+                                _TableHeader(title: "No", width: 40),
+                                _TableHeader(title: "ID", width: 70),
+                                _TableHeader(title: "Pelanggan", width: 120),
+                                _TableHeader(title: "Tanggal", width: 90),
+                                _TableHeader(title: "Alasan", width: 180),
+                                _TableHeader(title: "Status", width: 100),
+                                _TableHeader(title: "Aksi", width: 160),
                               ],
                             ),
                           ),
@@ -373,151 +135,104 @@ class _KelolaPembatalanPageState extends State<KelolaPembatalanPage> {
 
                           // DATA TABLE
                           Expanded(
-                            child: ListView.builder(
-                              itemCount: filteredData.length,
-                              itemBuilder: (context, index) {
-                                final item = filteredData[index];
+                            child: StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseService.streamSemuaPembatalan(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  return const Center(child: CircularProgressIndicator());
+                                }
+                                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                                  return const Center(child: Text('Belum ada data pembatalan'));
+                                }
 
-                                return Container(
-                                  margin: const EdgeInsets.only(
-                                    bottom: 8,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 10,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xffEEF2F5,
-                                    ),
-                                    borderRadius: BorderRadius.circular(
-                                      10,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      TableCellText(
-                                        text: item['no'],
-                                        width: 40,
-                                      ),
+                                final docs = snapshot.data!.docs.where((doc) {
+                                  final d = doc.data() as Map<String, dynamic>;
+                                  final q = searchQuery.toLowerCase();
+                                  return q.isEmpty ||
+                                      (d['namaCustomer'] ?? '').toString().toLowerCase().contains(q) ||
+                                      (d['pesananId'] ?? '').toString().toLowerCase().contains(q);
+                                }).toList();
 
-                                      TableCellText(
-                                        text: item['id'],
-                                        width: 70,
-                                      ),
+                                return ListView.builder(
+                                  itemCount: docs.length,
+                                  itemBuilder: (context, index) {
+                                    final doc = docs[index];
+                                    final item = doc.data() as Map<String, dynamic>;
+                                    final status = item['status'] ?? 'pending';
+                                    Color statusColor = status == 'pending'
+                                        ? Colors.orange
+                                        : status == 'disetujui'
+                                            ? Colors.green
+                                            : Colors.red;
 
-                                      TableCellText(
-                                        text: "${item['nama']}\n${item['hp']}",
-                                        width: 120,
-                                      ),
+                                    final tanggal = item['tanggalPembatalan'] != null
+                                        ? (item['tanggalPembatalan'] as Timestamp).toDate().toString().substring(0, 10)
+                                        : '-';
 
-                                      TableCellText(
-                                        text: item['tanggal'],
-                                        width: 90,
-                                      ),
-
-                                      TableCellText(
-                                        text: item['alasan'],
-                                        width: 180,
-                                      ),
-
-                                      // STATUS
-                                      SizedBox(
-                                        width: 100,
-                                        child: Center(
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 5,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: item['status'] == "pending"
-                                                  ? Colors.orange
-                                                  : item['status'] ==
-                                                          "disetujui"
-                                                      ? Colors.green
-                                                      : Colors.red,
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                6,
-                                              ),
-                                            ),
-                                            child: Text(
-                                              item['status'],
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.bold,
+                                    return Container(
+                                      margin: const EdgeInsets.only(bottom: 8),
+                                      padding: const EdgeInsets.symmetric(vertical: 10),
+                                      decoration: BoxDecoration(
+                                          color: const Color(0xffEEF2F5),
+                                          borderRadius: BorderRadius.circular(10)),
+                                      child: Row(
+                                        children: [
+                                          _TableCell(text: '${index + 1}.', width: 40),
+                                          _TableCell(text: (item['pesananId'] ?? '').toString().substring(0, 6).toUpperCase(), width: 70),
+                                          _TableCell(text: '${item['namaCustomer'] ?? ''}\n${item['nomorHp'] ?? ''}', width: 120),
+                                          _TableCell(text: tanggal, width: 90),
+                                          _TableCell(text: item['alasanPembatalan'] ?? '-', width: 180),
+                                          // STATUS
+                                          SizedBox(
+                                            width: 100,
+                                            child: Center(
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                                                decoration: BoxDecoration(color: statusColor, borderRadius: BorderRadius.circular(6)),
+                                                child: Text(status, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                                               ),
                                             ),
                                           ),
-                                        ),
+                                          // AKSI
+                                          SizedBox(
+                                            width: 160,
+                                            child: status == 'pending'
+                                                ? Row(
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    children: [
+                                                      ElevatedButton(
+                                                        onPressed: () async {
+                                                          await FirebaseService.updateStatusPembatalan(
+                                                              doc.id, 'disetujui', item['pesananId'] ?? '');
+                                                          if (context.mounted) {
+                                                            ScaffoldMessenger.of(context).showSnackBar(
+                                                                const SnackBar(content: Text('Pembatalan disetujui')));
+                                                          }
+                                                        },
+                                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green, minimumSize: const Size(60, 30)),
+                                                        child: const Text("Setuju", style: TextStyle(fontSize: 9, color: Colors.white)),
+                                                      ),
+                                                      const SizedBox(width: 5),
+                                                      ElevatedButton(
+                                                        onPressed: () async {
+                                                          await FirebaseService.updateStatusPembatalan(
+                                                              doc.id, 'ditolak', item['pesananId'] ?? '');
+                                                          if (context.mounted) {
+                                                            ScaffoldMessenger.of(context).showSnackBar(
+                                                                const SnackBar(content: Text('Pembatalan ditolak')));
+                                                          }
+                                                        },
+                                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red, minimumSize: const Size(60, 30)),
+                                                        child: const Text("Tolak", style: TextStyle(fontSize: 9, color: Colors.white)),
+                                                      ),
+                                                    ],
+                                                  )
+                                                : const Center(child: Text("-", style: TextStyle(fontWeight: FontWeight.bold))),
+                                          ),
+                                        ],
                                       ),
-
-                                      // BUTTON AKSI
-                                      SizedBox(
-                                        width: 160,
-                                        child: item['status'] == "pending"
-                                            ? Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  ElevatedButton(
-                                                    onPressed: () {
-                                                      approveCancellation(
-                                                          index);
-                                                    },
-                                                    style: ElevatedButton
-                                                        .styleFrom(
-                                                      backgroundColor:
-                                                          Colors.green,
-                                                      minimumSize: const Size(
-                                                        60,
-                                                        30,
-                                                      ),
-                                                    ),
-                                                    child: const Text(
-                                                      "Setuju",
-                                                      style: TextStyle(
-                                                        fontSize: 9,
-                                                        color: Colors.white,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 5),
-                                                  ElevatedButton(
-                                                    onPressed: () {
-                                                      rejectCancellation(index);
-                                                    },
-                                                    style: ElevatedButton
-                                                        .styleFrom(
-                                                      backgroundColor:
-                                                          Colors.red,
-                                                      minimumSize: const Size(
-                                                        60,
-                                                        30,
-                                                      ),
-                                                    ),
-                                                    child: const Text(
-                                                      "Tolak",
-                                                      style: TextStyle(
-                                                        fontSize: 9,
-                                                        color: Colors.white,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              )
-                                            : const Center(
-                                                child: Text(
-                                                  "-",
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                      ),
-                                    ],
-                                  ),
+                                    );
+                                  },
                                 );
                               },
                             ),
@@ -536,45 +251,27 @@ class _KelolaPembatalanPageState extends State<KelolaPembatalanPage> {
   }
 }
 
-// ================= HEADER TABLE =================
-class TableHeader extends StatelessWidget {
+class _TableHeader extends StatelessWidget {
   final String title;
   final double width;
-
-  const TableHeader({
-    super.key,
-    required this.title,
-    required this.width,
-  });
+  const _TableHeader({required this.title, required this.width});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: width,
       child: Center(
-        child: Text(
-          title,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        child: Text(title, textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
       ),
     );
   }
 }
 
-// ================= CELL TABLE =================
-class TableCellText extends StatelessWidget {
+class _TableCell extends StatelessWidget {
   final String text;
   final double width;
-
-  const TableCellText({
-    super.key,
-    required this.text,
-    required this.width,
-  });
+  const _TableCell({required this.text, required this.width});
 
   @override
   Widget build(BuildContext context) {
@@ -582,17 +279,9 @@ class TableCellText extends StatelessWidget {
       width: width,
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 4,
-          ),
-          child: Text(
-            text,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(text, textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600)),
         ),
       ),
     );

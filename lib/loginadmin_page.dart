@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/firebase_service.dart';
 import 'package:flutter_application_1/forgetpassword.dart';
 import 'package:flutter_application_1/homeadmin_page.dart';
 
@@ -18,8 +19,24 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class LoginAdminPage extends StatelessWidget {
+class LoginAdminPage extends StatefulWidget {
   const LoginAdminPage({super.key});
+
+  @override
+  State<LoginAdminPage> createState() => _LoginAdminPageState();
+}
+
+class _LoginAdminPageState extends State<LoginAdminPage> {
+  // ======= TAMBAH CONTROLLER =======
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +50,7 @@ class LoginAdminPage extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () {},
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
@@ -72,7 +89,10 @@ class LoginAdminPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 32),
+              // ======= EMAIL TERHUBUNG KE CONTROLLER =======
               TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: 'Email/No.telepon',
                   hintStyle: const TextStyle(color: Colors.grey),
@@ -92,7 +112,9 @@ class LoginAdminPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
+              // ======= PASSWORD TERHUBUNG KE CONTROLLER =======
               TextField(
+                controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   hintText: 'Password',
@@ -135,7 +157,7 @@ class LoginAdminPage extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // ✅ SIGN IN DENGAN NAVIGATOR
+              // ======= SIGN IN TERHUBUNG KE FIREBASE =======
               Container(
                 width: double.infinity,
                 height: 55,
@@ -150,13 +172,45 @@ class LoginAdminPage extends StatelessWidget {
                   ],
                 ),
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const HomeAdminPage(),
-                      ),
+                  onPressed: () async {
+                    final email = _emailController.text.trim();
+                    final password = _passwordController.text.trim();
+
+                    if (email.isEmpty || password.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Email dan password wajib diisi')),
+                      );
+                      return;
+                    }
+
+                    // ======= LOGIN ADMIN VIA FIREBASE =======
+                    // Cek di koleksi "users" apakah role == 'admin'
+                    // CARA BUAT AKUN ADMIN: tambahkan dokumen di Firestore
+                    // koleksi "users" dengan field role:'admin', lalu buat
+                    // akun di Firebase Authentication secara manual.
+                    final result = await FirebaseService.loginAdmin(
+                      email: email,
+                      password: password,
                     );
+
+                    if (!mounted) return;
+
+                    if (result['success'] == true) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HomeAdminPage(),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(result['message'] ?? 'Login gagal'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,

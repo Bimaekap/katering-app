@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/firebase_service.dart';
 import 'package:flutter_application_1/payment_page.dart';
 import 'package:intl/intl.dart';
 
@@ -214,12 +215,74 @@ class _KeranjangPageState extends State<KeranjangPage> {
                   width: double.infinity,
                   height: 60,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
+                      // ======= VALIDASI FORM =======
+                      if (namaController.text.trim().isEmpty ||
+                          nomorController.text.trim().isEmpty ||
+                          alamatController.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  'Nama, nomor HP, dan alamat wajib diisi')),
+                        );
+                        return;
+                      }
+                      if (tanggalPemesanan == "Pilih tanggal" ||
+                          tanggalAcara == "Pilih tanggal") {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  'Tanggal pemesanan dan acara wajib dipilih')),
+                        );
+                        return;
+                      }
+
+                      // ======= SIMPAN PESANAN KE FIRESTORE =======
+                      // Membuat dokumen baru di koleksi "pesanan"
+                      final items = widget.cartList
+                          .map((item) => {
+                                'menuId': item['id'] ?? '',
+                                'namaMenu': item['title'],
+                                'harga': item['price'],
+                                'qty': item['qty'],
+                              })
+                          .toList();
+
+                      final pesananId = await FirebaseService.simpanPesanan(
+                        namaCustomer: namaController.text.trim(),
+                        nomorHp: nomorController.text.trim(),
+                        alamat: alamatController.text.trim(),
+                        catatan: catatanController.text.trim(),
+                        tanggalPemesanan: tanggalPemesanan,
+                        tanggalAcara: tanggalAcara,
+                        items: items,
+                        totalHarga: totalHarga(),
+                        totalPorsi: totalPorsi(),
+                      );
+
+                      if (!context.mounted) return;
+
+                      if (pesananId == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content:
+                                Text('Gagal menyimpan pesanan. Coba lagi.'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
+
+                      // Tutup bottom sheet lalu ke PaymentPage
+                      Navigator.pop(context);
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => PaymentPage(
                             totalHarga: totalHarga(),
+                            pesananId: pesananId,
+                            namaCustomer: namaController.text.trim(),
+                            nomorHp: nomorController.text.trim(),
                           ),
                         ),
                       );

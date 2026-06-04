@@ -168,7 +168,6 @@ class _LaporanPesananPageState extends State<LaporanPesananPage> {
 
         // DATE
         DateTime tanggalPesan = convertToDate(item["tglPesan"]);
-        DateTime tanggalAcara = convertToDate(item["tglAcara"]);
 
         // FORMAT BULAN / TAHUN / MINGGU
         String bulanPesan = tanggalPesan.month.toString(); // contoh: 4

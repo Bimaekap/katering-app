@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_application_1/firebase_service.dart';
 import 'package:flutter_application_1/tambahmenu.dart';
 
 void main() {
@@ -28,61 +30,8 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
   final TextEditingController searchController = TextEditingController();
   String query = "";
 
-  final List<Map<String, String>> menuList = [
-    {
-      "nama": "Ayam Panggang",
-      "deskripsi": "Ayam panggang, dengan nasi, sop, sayur rebusan, dan jus",
-      "harga": "Rp. 35.000",
-      "gambar": "assets/ayam_panggang.png",
-    },
-    {
-      "nama": "Babi Panggang",
-      "deskripsi":
-          "Babi panggang, dengan nasi, sop, sayur daun ubi, aqua gelas",
-      "harga": "Rp. 35.000",
-      "gambar": "assets/babi_panggang.png",
-    },
-    {
-      "nama": "Ikan Mas Diura",
-      "deskripsi": "Ikan mas ura, dengan nasi, lalapan",
-      "harga": "Rp. 35.000",
-      "gambar": "assets/ikan_mas_ura.png",
-    },
-    {
-      "nama": "Ayam Penyet",
-      "deskripsi": "Ayam penyet dengan nasi, lalapan, jus",
-      "harga": "Rp. 35.000",
-      "gambar": "assets/ayam_penyet.png",
-    },
-    {
-      "nama": "Saksang",
-      "deskripsi": "Saksang, dengan nasi, sop, sayur daun ubi, aqua gelas",
-      "harga": "Rp. 35.000",
-      "gambar": "assets/babi_saksang.png",
-    },
-    {
-      "nama": "Ikan Mas Arsik",
-      "deskripsi":
-          "Ikan Mas Arsik, dengan nasi, sop, sayur daun ubi, aqua gelas",
-      "harga": "Rp. 35.000",
-      "gambar": "assets/ikan_mas_arsik.png",
-    },
-    {
-      "nama": "Ayam Napinadar",
-      "deskripsi": "Ayam Napinadar, dengan nasi, sop, sayur rebusan, dan jus",
-      "harga": "Rp. 35.000",
-      "gambar": "assets/ayam_napinadar.png",
-    },
-  ];
-
-  List<Map<String, String>> get filteredMenu {
-    if (query.isEmpty) return menuList;
-
-    return menuList.where((item) {
-      final nama = item["nama"]!.toLowerCase();
-      return nama.contains(query.toLowerCase());
-    }).toList();
-  }
+  // ======= menuList diganti StreamBuilder dari Firestore =======
+  // Tidak perlu hardcoded list lagi
 
   @override
   Widget build(BuildContext context) {
@@ -287,58 +236,96 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
 
             const SizedBox(height: 8),
 
-            // LIST MENU (SUDAH TERFILTER)
+            // ======= LIST MENU DARI FIRESTORE (REALTIME) =======
+            // StreamBuilder otomatis memperbarui tampilan saat ada
+            // perubahan di koleksi "menus" tanpa reload manual
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                itemCount: filteredMenu.length,
-                itemBuilder: (context, index) {
-                  final item = filteredMenu[index];
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseService.streamSemuaMenus(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(child: Text('Belum ada menu'));
+                  }
 
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xffD8E1E6),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      children: [
-                        ClipRRect(
+                  final docs = snapshot.data!.docs.where((doc) {
+                    final nama = (doc['nama'] ?? '').toString().toLowerCase();
+                    return query.isEmpty || nama.contains(query.toLowerCase());
+                  }).toList();
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    itemCount: docs.length,
+                    itemBuilder: (context, index) {
+                      final doc = docs[index];
+                      final d = doc.data() as Map<String, dynamic>;
+                      final fotoUrl = d['foto_url'] ?? '';
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xffD8E1E6),
                           borderRadius: BorderRadius.circular(10),
-                          child: Image.asset(
-                            item["gambar"]!,
-                            width: 70,
-                            height: 70,
-                            fit: BoxFit.cover,
-                          ),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item["nama"]!,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                        child: Row(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: fotoUrl.isNotEmpty
+                                  ? Image.network(fotoUrl,
+                                      width: 70,
+                                      height: 70,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) =>
+                                          _imgPlaceholder())
+                                  : _imgPlaceholder(),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    d['nama'] ?? '',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    d['deskripsi'] ?? '',
+                                    style: const TextStyle(fontSize: 10),
+                                  ),
+                                  Text(
+                                    'Rp. ${d['harga'] ?? 0}',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                  Text(
+                                    'Status: ${d['status'] ?? ''}',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: d['status'] == 'aktif'
+                                          ? Colors.green
+                                          : Colors.red,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                item["deskripsi"]!,
-                                style: const TextStyle(fontSize: 10),
-                              ),
-                              Text(
-                                item["harga"]!,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                            // ======= TOMBOL HAPUS MENU =======
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline,
+                                  color: Colors.red, size: 20),
+                              onPressed: () async {
+                                await FirebaseService.hapusMenu(doc.id);
+                              },
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   );
                 },
               ),
@@ -346,6 +333,15 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _imgPlaceholder() {
+    return Container(
+      width: 70,
+      height: 70,
+      color: Colors.grey.shade300,
+      child: const Icon(Icons.restaurant, color: Colors.grey),
     );
   }
 }

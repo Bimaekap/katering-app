@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pembatalan_page.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter_application_1/firebase_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,7 +20,9 @@ class MyApp extends StatelessWidget {
 }
 
 class DetailPesananPage extends StatefulWidget {
-  const DetailPesananPage({super.key});
+  final String? pesananId;
+  final Map<String, dynamic>? pesananData;
+  const DetailPesananPage({super.key, this.pesananId, this.pesananData});
 
   @override
   State<DetailPesananPage> createState() => _DetailPesananPageState();
@@ -26,6 +30,7 @@ class DetailPesananPage extends StatefulWidget {
 
 class _DetailPesananPageState extends State<DetailPesananPage> {
   final TextEditingController alasanController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void dispose() {
@@ -101,10 +106,14 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
                 ),
                 child: Column(
                   children: [
-                    buildInfoRow("Dyren", "Jl. Mahoni"),
-                    buildInfoRow("Status", "Sedang Diproses"),
-                    buildInfoRow("Tgl Pesanan", "19 April 2026"),
-                    buildInfoRow("Tgl Acara", "05 Mei 2026"),
+                    buildInfoRow(widget.pesananData?['namaCustomer'] ?? 'Nama',
+                        widget.pesananData?['alamat'] ?? ''),
+                    buildInfoRow(
+                        "Status", widget.pesananData?['statusPesanan'] ?? '-'),
+                    buildInfoRow("Tgl Pesanan",
+                        widget.pesananData?['tanggalPemesanan'] ?? ''),
+                    buildInfoRow(
+                        "Tgl Acara", widget.pesananData?['tanggalAcara'] ?? ''),
                   ],
                 ),
               ),
@@ -214,6 +223,60 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
 
               const Spacer(),
 
+              // Upload bukti pembayaran (jika status menunggu_verifikasi_pembayaran atau menunggu_pembayaran)
+              if ((widget.pesananData?['statusPesanan'] ?? '')
+                  .toString()
+                  .contains('menunggu'))
+                Center(
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final XFile? picked = await _picker.pickImage(
+                          source: ImageSource.gallery, maxWidth: 1200);
+                      if (picked == null) return;
+                      // Baca bytes — aman untuk web & mobile
+                      final bytes = await picked.readAsBytes();
+                      final ext = picked.name.split('.').last.toLowerCase();
+                      final contentType =
+                          ext == 'png' ? 'image/png' : 'image/jpeg';
+                      final pesananId = widget.pesananId ??
+                          DateTime.now().millisecondsSinceEpoch.toString();
+                      final url =
+                          await FirebaseService.uploadBuktiPembayaranFromBytes(
+                              pesananId, bytes,
+                              contentType: contentType);
+                      if (url != null) {
+                        await FirebaseService.simpanPembayaran(
+                          pesananId: pesananId,
+                          namaCustomer:
+                              widget.pesananData?['namaCustomer'] ?? '',
+                          nomorHp: widget.pesananData?['nomorHp'] ?? '',
+                          jenisPembayaran: 'dp',
+                          nominal:
+                              (widget.pesananData?['totalHarga'] ?? 0) ~/ 2,
+                          metodePembayaran: 'transfer',
+                          bankEwallet: 'Manual',
+                          buktiBayarUrl: url,
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Bukti berhasil diunggah')));
+                        }
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Gagal upload bukti')));
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.upload_file),
+                    label: const Text('Upload Bukti Pembayaran'),
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  ),
+                ),
+
               // ================= BUTTON =================
               Center(
                 child: GestureDetector(
@@ -286,26 +349,35 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
                                   // YA
                                   Expanded(
                                     child: ElevatedButton(
-                                      onPressed: () {
+                                      onPressed: () async {
                                         Navigator.pop(context);
-
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              "Pembatalan berhasil dikirim\nAlasan: ${alasanController.text}",
+                                        // ===== SIMPAN PEMBATALAN KE FIRESTORE =====
+                                        await FirebaseService.ajukanPembatalan(
+                                          pesananId: widget.pesananId ?? '',
+                                          namaCustomer: widget.pesananData?[
+                                                  'namaCustomer'] ??
+                                              '',
+                                          nomorHp:
+                                              widget.pesananData?['nomorHp'] ??
+                                                  '',
+                                          alasan: alasanController.text.trim(),
+                                        );
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                  "Pembatalan berhasil dikirim"),
                                             ),
-                                          ),
-                                        );
-
-                                        // NAVIGATOR KE HALAMAN PEMBATALAN DIPROSES
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const PembatalanDiprosesPage(),
-                                          ),
-                                        );
+                                          );
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const PembatalanDiprosesPage(),
+                                            ),
+                                          );
+                                        }
                                       },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.red,

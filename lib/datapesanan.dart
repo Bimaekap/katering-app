@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/detailpembayaran.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_application_1/firebase_service.dart';
 import 'package:flutter_application_1/tambahpesanan.dart';
 
 void main() {
@@ -27,125 +28,10 @@ class DataPesananPage extends StatefulWidget {
 
 class _DataPesananPageState extends State<DataPesananPage> {
   final TextEditingController searchController = TextEditingController();
+  String searchQuery = '';
 
-  final List<Map<String, dynamic>> allPesanan = [
-    {
-      "no": "1.",
-      "id": "ORD001",
-      "nama": "Yanto",
-      "hp": "08212121121",
-      "tglPesanan": "20-04-2026",
-      "tglAcara": "28-04-2026",
-      "alamat": "Jl. Mahoni.12",
-      "menu": "Napinadar\nx 500 piring",
-      "total": "10.000.000",
-      "dp": "3.000.000",
-      "status": "Menunggu\nKonfirmasi",
-      "statusColor": Colors.orange,
-    },
-    {
-      "no": "2.",
-      "id": "ORD002",
-      "nama": "Ainun",
-      "hp": "08212121121",
-      "tglPesanan": "23-03-2026",
-      "tglAcara": "22-03-2026",
-      "alamat": "Jl.Perjuangan",
-      "menu": "Rendang\nx 200 piring",
-      "total": "5.000.000",
-      "dp": "-",
-      "status": "Dikirim",
-      "statusColor": Colors.cyan,
-    },
-    {
-      "no": "3.",
-      "id": "ORD003",
-      "nama": "Ruslita",
-      "hp": "08212121121",
-      "tglPesanan": "20-04-2026",
-      "tglAcara": "27-04-2026",
-      "alamat": "Jl. Aggrek",
-      "menu": "Ayam penyet\nx 100 Kotak",
-      "total": "2.000.000",
-      "dp": "600.000",
-      "status": "Diproses",
-      "statusColor": Colors.green,
-    },
-    {
-      "no": "4.",
-      "id": "ORD004",
-      "nama": "Marco",
-      "hp": "08212121121",
-      "tglPesanan": "03-04-2026",
-      "tglAcara": "10-04-2026",
-      "alamat": "Jl.Perintis no.2",
-      "menu": "Ayam penyet\nx 100 Kotak",
-      "total": "2.000.000",
-      "dp": "-",
-      "status": "Selesai",
-      "statusColor": Colors.lightGreen,
-    },
-    {
-      "no": "5.",
-      "id": "ORD005",
-      "nama": "Budi",
-      "hp": "081398765432",
-      "tglPesanan": "05-05-2026",
-      "tglAcara": "12-05-2026",
-      "alamat": "Jl. Sakura",
-      "menu": "Sate Ayam\nx 300 porsi",
-      "total": "4.500.000",
-      "dp": "1.500.000",
-      "status": "Diproses",
-      "statusColor": Colors.green,
-    },
-    {
-      "no": "6.",
-      "id": "ORD006",
-      "nama": "Siska",
-      "hp": "082112223333",
-      "tglPesanan": "11-05-2026",
-      "tglAcara": "18-05-2026",
-      "alamat": "Jl. Melati",
-      "menu": "Nasi Kotak\nx 150 kotak",
-      "total": "3.000.000",
-      "dp": "1.000.000",
-      "status": "Selesai",
-      "statusColor": Colors.lightGreen,
-    },
-  ];
-
-  List<Map<String, dynamic>> filteredPesanan = [];
-
-  @override
-  void initState() {
-    super.initState();
-    filteredPesanan = allPesanan;
-  }
-
-  void searchPesanan(String query) {
-    final hasil = allPesanan.where((data) {
-      final id = data["id"].toString().toLowerCase();
-      final nama = data["nama"].toString().toLowerCase();
-      final tglPesanan = data["tglPesanan"].toString().toLowerCase();
-      final tglAcara = data["tglAcara"].toString().toLowerCase();
-      final alamat = data["alamat"].toString().toLowerCase();
-      final status = data["status"].toString().toLowerCase();
-
-      final input = query.toLowerCase();
-
-      return id.contains(input) ||
-          nama.contains(input) ||
-          tglPesanan.contains(input) ||
-          tglAcara.contains(input) ||
-          alamat.contains(input) ||
-          status.contains(input);
-    }).toList();
-
-    setState(() {
-      filteredPesanan = hasil;
-    });
-  }
+  // ======= DATA PESANAN DARI FIRESTORE =======
+  // Tidak perlu hardcoded list — pakai StreamBuilder di bawah
 
   @override
   Widget build(BuildContext context) {
@@ -280,7 +166,7 @@ class _DataPesananPageState extends State<DataPesananPage> {
                       ),
                       child: TextField(
                         controller: searchController,
-                        onChanged: searchPesanan,
+                        onChanged: (v) => setState(() => searchQuery = v),
                         style: TextStyle(
                           fontSize: width * 0.028,
                         ),
@@ -393,169 +279,147 @@ class _DataPesananPageState extends State<DataPesananPage> {
                         ),
                         SizedBox(height: width * 0.015),
                         Expanded(
-                          child: ListView.builder(
-                            itemCount: filteredPesanan.length,
-                            itemBuilder: (context, index) {
-                              final data = filteredPesanan[index];
+                          // ======= DATA PESANAN REALTIME DARI FIRESTORE =======
+                          child: StreamBuilder<QuerySnapshot>(
+                            stream: FirebaseService.streamSemuaPesanan(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              }
+                              if (!snapshot.hasData ||
+                                  snapshot.data!.docs.isEmpty) {
+                                return const Center(
+                                    child: Text('Belum ada pesanan'));
+                              }
 
-                              final status =
-                                  data["status"].toString().toLowerCase();
+                              final docs = snapshot.data!.docs.where((doc) {
+                                final d = doc.data() as Map<String, dynamic>;
+                                final nama = (d['namaCustomer'] ?? '')
+                                    .toString()
+                                    .toLowerCase();
+                                final status = (d['statusPesanan'] ?? '')
+                                    .toString()
+                                    .toLowerCase();
+                                final tglPesan = (d['tanggalPemesanan'] ?? '')
+                                    .toString()
+                                    .toLowerCase();
+                                final q = searchQuery.toLowerCase();
+                                return q.isEmpty ||
+                                    nama.contains(q) ||
+                                    status.contains(q) ||
+                                    tglPesan.contains(q) ||
+                                    doc.id.toLowerCase().contains(q);
+                              }).toList();
 
-                              final dp = data["dp"].toString();
+                              return ListView.builder(
+                                itemCount: docs.length,
+                                itemBuilder: (context, index) {
+                                  final doc = docs[index];
+                                  final data =
+                                      doc.data() as Map<String, dynamic>;
+                                  final status =
+                                      (data['statusPesanan'] ?? 'menunggu')
+                                          .toString()
+                                          .toLowerCase();
+                                  Color statusColor = Colors.orange;
+                                  if (status.contains('diproses')) {
+                                    statusColor = Colors.green;
+                                  } else if (status.contains('dikirim')) {
+                                    statusColor = Colors.cyan;
+                                  } else if (status.contains('selesai')) {
+                                    statusColor = Colors.lightGreen;
+                                  } else if (status.contains('batal')) {
+                                    statusColor = Colors.red;
+                                  }
 
-                              final bool isDp = dp != "-";
-
-                              return Container(
-                                margin: EdgeInsets.only(
-                                  bottom: width * 0.015,
-                                ),
-                                padding: EdgeInsets.symmetric(
-                                  vertical: width * 0.02,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xffD9DDE0),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  children: [
-                                    TableCellText(
-                                      width: 40,
-                                      text: data["no"],
+                                  return Container(
+                                    margin:
+                                        EdgeInsets.only(bottom: width * 0.015),
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: width * 0.02),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xffD9DDE0),
+                                      borderRadius: BorderRadius.circular(8),
                                     ),
-                                    TableCellText(
-                                      width: 80,
-                                      text: data["id"],
-                                    ),
-                                    TableCellText(
-                                      width: 110,
-                                      text: "${data["nama"]}\n${data["hp"]}",
-                                    ),
-                                    TableCellText(
-                                      width: 90,
-                                      text: data["tglPesanan"],
-                                    ),
-                                    TableCellText(
-                                      width: 90,
-                                      text: data["tglAcara"],
-                                    ),
-                                    TableCellText(
-                                      width: 100,
-                                      text: data["alamat"],
-                                    ),
-                                    TableCellText(
-                                      width: 110,
-                                      text: data["menu"],
-                                    ),
-                                    TableCellText(
-                                      width: 80,
-                                      text: data["total"],
-                                    ),
-                                    TableCellText(
-                                      width: 60,
-                                      text: data["dp"],
-                                    ),
-
-                                    // STATUS + LOGIKA
-                                    SizedBox(
-                                      width: 110,
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                            padding: EdgeInsets.symmetric(
-                                              horizontal: width * 0.01,
-                                              vertical: width * 0.01,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: data["statusColor"],
-                                              borderRadius:
-                                                  BorderRadius.circular(5),
-                                            ),
-                                            child: Text(
-                                              data["status"],
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                fontSize: width * 0.02,
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-
-                                          SizedBox(height: width * 0.01),
-
-                                          // MENUNGGU KONFIRMASI
-                                          if (status.contains("menunggu"))
-                                            Column(
-                                              children: [
-                                                // ================= DETAIL BUTTON =================
-                                                GestureDetector(
-                                                  onTap: () async {
-                                                    final result =
-                                                        await Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            const VerifikasiPembayaranPage(),
-                                                      ),
-                                                    );
-
-                                                    // jika tombol verifikasi ditekan
-                                                    if (result == "Diproses") {
-                                                      setState(() {
-                                                        data["status"] =
-                                                            "Diproses";
-                                                        data["statusColor"] =
-                                                            Colors.green;
-                                                      });
-                                                    }
-
-                                                    // jika tombol tolak ditekan
-                                                    else if (result ==
-                                                        "Ditolak") {
-                                                      setState(() {
-                                                        data["status"] =
-                                                            "Ditolak";
-                                                        data["statusColor"] =
-                                                            Colors.red;
-                                                      });
-                                                    }
-                                                  },
-                                                  child: Container(
-                                                    padding:
-                                                        EdgeInsets.symmetric(
-                                                      horizontal: width * 0.04,
-                                                      vertical: width * 0.015,
-                                                    ),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.blue,
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              6),
-                                                    ),
-                                                    child: const Text(
-                                                      "Detail",
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
+                                    child: Row(
+                                      children: [
+                                        TableCellText(
+                                            width: 40, text: '${index + 1}.'),
+                                        TableCellText(
+                                            width: 80,
+                                            text: doc.id
+                                                .substring(0, 6)
+                                                .toUpperCase()),
+                                        TableCellText(
+                                            width: 110,
+                                            text:
+                                                '${data['namaCustomer'] ?? ''}\n${data['nomorHp'] ?? ''}'),
+                                        TableCellText(
+                                            width: 90,
+                                            text:
+                                                data['tanggalPemesanan'] ?? ''),
+                                        TableCellText(
+                                            width: 90,
+                                            text: data['tanggalAcara'] ?? ''),
+                                        TableCellText(
+                                            width: 100,
+                                            text: data['alamat'] ?? ''),
+                                        TableCellText(
+                                            width: 110,
+                                            text:
+                                                '${(data['items'] as List?)?.length ?? 0} menu\nx${data['totalPorsi'] ?? 0} porsi'),
+                                        TableCellText(
+                                            width: 80,
+                                            text:
+                                                'Rp.${data['totalHarga'] ?? 0}'),
+                                        TableCellText(
+                                            width: 60,
+                                            text: data['statusPesanan'] ==
+                                                    'menunggu_verifikasi_pembayaran'
+                                                ? 'Ada DP'
+                                                : '-'),
+                                        // STATUS + UPDATE
+                                        SizedBox(
+                                          width: 110,
+                                          child: Column(
+                                            children: [
+                                              Container(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal: width * 0.01,
+                                                  vertical: width * 0.01,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: statusColor,
+                                                  borderRadius:
+                                                      BorderRadius.circular(5),
+                                                ),
+                                                child: Text(
+                                                  data['statusPesanan'] ?? '',
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                    fontSize: width * 0.02,
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
-                                                SizedBox(
-                                                  height: width * 0.005,
-                                                ),
+                                              ),
+                                              SizedBox(height: width * 0.01),
+                                              // ======= UPDATE STATUS PESANAN =======
+                                              if (status.contains('menunggu'))
                                                 GestureDetector(
-                                                  onTap: () {
-                                                    setState(() {
-                                                      data["status"] =
-                                                          "Diproses";
-                                                      data["statusColor"] =
-                                                          Colors.green;
-                                                    });
+                                                  onTap: () async {
+                                                    await FirebaseService
+                                                        .updateStatusPesananDanNotif(
+                                                      doc.id,
+                                                      'diproses',
+                                                      (data['userId'] ?? '')
+                                                          .toString(),
+                                                    );
                                                   },
                                                   child: Text(
-                                                    "Setujui",
+                                                    'Setujui',
                                                     style: TextStyle(
                                                       color: Colors.green,
                                                       fontWeight:
@@ -564,31 +428,82 @@ class _DataPesananPageState extends State<DataPesananPage> {
                                                     ),
                                                   ),
                                                 ),
-                                              ],
-                                            )
-
-                                          // DIPROSES / DIKIRIM / SELESAI
-                                          else if ((status
-                                                      .contains("diproses") ||
-                                                  status.contains("dikirim") ||
-                                                  status.contains("selesai")) &&
-                                              isDp)
-                                            GestureDetector(
-                                              onTap: () {},
-                                              child: Text(
-                                                "Detail",
-                                                style: TextStyle(
-                                                  color: Colors.blue,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: width * 0.022,
+                                              if (status.contains('diproses'))
+                                                GestureDetector(
+                                                  onTap: () async {
+                                                    await FirebaseService
+                                                        .updateStatusPesananDanNotif(
+                                                      doc.id,
+                                                      'dikirim',
+                                                      (data['userId'] ?? '')
+                                                          .toString(),
+                                                    );
+                                                  },
+                                                  child: Text(
+                                                    'Kirim',
+                                                    style: TextStyle(
+                                                      color: Colors.cyan,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: width * 0.022,
+                                                    ),
+                                                  ),
                                                 ),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
+                                              if (status.contains('dikirim'))
+                                                GestureDetector(
+                                                  onTap: () async {
+                                                    await FirebaseService
+                                                        .updateStatusPesananDanNotif(
+                                                      doc.id,
+                                                      'selesai',
+                                                      (data['userId'] ?? '')
+                                                          .toString(),
+                                                    );
+                                                  },
+                                                  child: Text(
+                                                    'Selesai',
+                                                    style: TextStyle(
+                                                      color: Colors.green,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: width * 0.022,
+                                                    ),
+                                                  ),
+                                                ),
+                                              const SizedBox(height: 6),
+                                              // Tampilkan bukti pembayaran jika ada
+                                              if ((data['buktiBayarUrl'] ??
+                                                      '') !=
+                                                  '')
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    showDialog(
+                                                      context: context,
+                                                      builder: (_) =>
+                                                          AlertDialog(
+                                                        content: Image.network(
+                                                            data[
+                                                                'buktiBayarUrl']),
+                                                      ),
+                                                    );
+                                                  },
+                                                  child: Text(
+                                                    'Lihat Bukti',
+                                                    style: TextStyle(
+                                                      color: Colors.blue,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: width * 0.02,
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                  );
+                                },
                               );
                             },
                           ),

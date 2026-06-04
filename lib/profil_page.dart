@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/login_page.dart';
+import 'firebase_service.dart';
 import 'home_page.dart';
 import 'riwayat_page.dart';
 
@@ -165,21 +167,23 @@ class _ProfilePageState extends State<ProfilePage> {
                   top: 12,
                   right: 10,
                   child: TextButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginPage(),
-                        ),
-                      );
+                    onPressed: () async {
+                      await FirebaseService.signOut();
+                      if (context.mounted) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const LoginPage()),
+                          (route) => false,
+                        );
+                      }
                     },
                     child: const Text(
                       'Log Out',
                       style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
-                      ),
+                          color: Colors.black,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13),
                     ),
                   ),
                 ),
@@ -245,24 +249,36 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 45),
 
             // =========================
-            // USER INFO
+            // USER INFO (FIRESTORE REALTIME)
             // =========================
-            const Text(
-              'Dyren',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 2),
-
-            const Text(
-              'dyren@gmail.com | +62 234 567 89',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.black87,
-              ),
+            StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseService.streamUserData(),
+              builder: (context, snapshot) {
+                final nama = (snapshot.hasData && snapshot.data!.exists)
+                    ? (snapshot.data!.data() as Map<String, dynamic>)['nama'] ??
+                        'Pengguna'
+                    : 'Pengguna';
+                final email = (snapshot.hasData && snapshot.data!.exists)
+                    ? (snapshot.data!.data()
+                            as Map<String, dynamic>)['email'] ??
+                        ''
+                    : '';
+                final noHp = (snapshot.hasData && snapshot.data!.exists)
+                    ? (snapshot.data!.data() as Map<String, dynamic>)['noHp'] ??
+                        ''
+                    : '';
+                return Column(
+                  children: [
+                    Text(nama,
+                        style: const TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 2),
+                    Text('$email | $noHp',
+                        style: const TextStyle(
+                            fontSize: 12, color: Colors.black87)),
+                  ],
+                );
+              },
             ),
 
             const SizedBox(height: 12),

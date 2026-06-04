@@ -1,0 +1,425 @@
+{
+    "__comment": "=================================================================",
+    "__info": "FIRESTORE SEED DATA - Katering Ridu Sianturi",
+    "__cara_import": "Gunakan halaman SeedDataPage di dalam app (tombol Dev di Welcome)",
+    "__akun_login": {
+        "admin": {
+            "email": "admin@katering.com",
+            "password": "admin123",
+            "role": "admin"
+        },
+        "pelanggan_1": {
+            "email": "dyren@gmail.com",
+            "password": "pelanggan123",
+            "role": "pelanggan"
+        },
+        "pelanggan_2": {
+            "email": "rani@gmail.com",
+            "password": "pelanggan123",
+            "role": "pelanggan"
+        },
+        "pelanggan_3": {
+            "email": "budi@gmail.com",
+            "password": "pelanggan123",
+            "role": "pelanggan"
+        }
+    },
+    "collections": {
+        "users": [
+            {
+                "__doc_id": "AUTO (dari Firebase Auth UID)",
+                "nama": "Admin Ridu Sianturi",
+                "email": "admin@katering.com",
+                "noHp": "081200000001",
+                "role": "admin",
+                "createdAt": "SERVER_TIMESTAMP"
+            },
+            {
+                "__doc_id": "AUTO (dari Firebase Auth UID)",
+                "nama": "Dyren Sihombing",
+                "email": "dyren@gmail.com",
+                "noHp": "081234567801",
+                "role": "pelanggan",
+                "createdAt": "SERVER_TIMESTAMP"
+            },
+            {
+                "__doc_id": "AUTO (dari Firebase Auth UID)",
+                "nama": "Rani Simanjuntak",
+                "email": "rani@gmail.com",
+                "noHp": "081234567802",
+                "role": "pelanggan",
+                "createdAt": "SERVER_TIMESTAMP"
+            },
+            {
+                "__doc_id": "AUTO (dari Firebase Auth UID)",
+                "nama": "Budi Santoso",
+                "email": "budi@gmail.com",
+                "noHp": "081234567803",
+                "role": "pelanggan",
+                "createdAt": "SERVER_TIMESTAMP"
+            }
+        ],
+        "menus": [
+            {
+                "__doc_id": "AUTO",
+                "nama": "Nasi Goreng Spesial",
+                "deskripsi": "Nasi goreng dengan telur, ayam, dan sayuran pilihan",
+                "harga": 35000,
+                "kategori": "Makanan Utama",
+                "foto_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Nasi_goreng.jpg/640px-Nasi_goreng.jpg",
+                "status": "aktif",
+                "stok": 50,
+                "createdAt": "SERVER_TIMESTAMP"
+            },
+            {
+                "__doc_id": "AUTO",
+                "nama": "Soto Ayam Medan",
+                "deskripsi": "Soto ayam kuah bening khas Medan dengan lontong",
+                "harga": 30000,
+                "kategori": "Makanan Utama",
+                "foto_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Soto_ayam_lamongan.jpg/640px-Soto_ayam_lamongan.jpg",
+                "status": "aktif",
+                "stok": 40,
+                "createdAt": "SERVER_TIMESTAMP"
+            },
+            {
+                "__doc_id": "AUTO",
+                "nama": "Ayam Bakar Bumbu Kecap",
+                "deskripsi": "Ayam bakar dengan bumbu kecap manis dan rempah pilihan",
+                "harga": 45000,
+                "kategori": "Makanan Utama",
+                "foto_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Ayam-bakar-wiki.jpg/640px-Ayam-bakar-wiki.jpg",
+                "status": "aktif",
+                "stok": 30,
+                "createdAt": "SERVER_TIMESTAMP"
+            },
+            {
+                "__doc_id": "AUTO",
+                "nama": "Rendang Daging Sapi",
+                "deskripsi": "Rendang daging sapi empuk dengan santan dan bumbu khas",
+                "harga": 55000,
+                "kategori": "Makanan Utama",
+                "foto_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Rendang_-_By_Farizun_Amrod_Saad.jpg/640px-Rendang_-_By_Farizun_Amrod_Saad.jpg",
+                "status": "aktif",
+                "stok": 25,
+                "createdAt": "SERVER_TIMESTAMP"
+            },
+            {
+                "__doc_id": "AUTO",
+                "nama": "Es Teh Manis",
+                "deskripsi": "Teh manis segar dengan es batu",
+                "harga": 8000,
+                "kategori": "Minuman",
+                "foto_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Es_teh_manis.jpg/640px-Es_teh_manis.jpg",
+                "status": "aktif",
+                "stok": 100,
+                "createdAt": "SERVER_TIMESTAMP"
+            },
+            {
+                "__doc_id": "AUTO",
+                "nama": "Paket Nasi Box Hemat",
+                "deskripsi": "Nasi + 1 lauk + sayur + kerupuk, cocok untuk acara",
+                "harga": 25000,
+                "kategori": "Paket",
+                "foto_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Good_Food_Display_-_NCI_Visuals_Online.jpg/640px-Good_Food_Display_-_NCI_Visuals_Online.jpg",
+                "status": "aktif",
+                "stok": 200,
+                "createdAt": "SERVER_TIMESTAMP"
+            }
+        ],
+        "pesanan": [
+            {
+                "__doc_id": "AUTO",
+                "userId": "UID_DYREN (dari users collection)",
+                "namaCustomer": "Dyren Sihombing",
+                "nomorHp": "081234567801",
+                "alamat": "Jl. Sudirman No.12, Medan",
+                "catatan": "Tolong tidak terlalu pedas",
+                "tanggalPemesanan": "2026-05-28T00:00:00.000Z",
+                "tanggalAcara": "2026-06-05T00:00:00.000Z",
+                "items": [
+                    {
+                        "nama": "Nasi Goreng Spesial",
+                        "harga": 35000,
+                        "jumlah": 50
+                    },
+                    {
+                        "nama": "Es Teh Manis",
+                        "harga": 8000,
+                        "jumlah": 50
+                    }
+                ],
+                "totalHarga": 2150000,
+                "totalPorsi": 100,
+                "statusPesanan": "menunggu_konfirmasi",
+                "createdAt": "SERVER_TIMESTAMP"
+            },
+            {
+                "__doc_id": "AUTO",
+                "userId": "UID_RANI (dari users collection)",
+                "namaCustomer": "Rani Simanjuntak",
+                "nomorHp": "081234567802",
+                "alamat": "Jl. Gatot Subroto No.5, Medan",
+                "catatan": "Untuk acara pernikahan 200 orang",
+                "tanggalPemesanan": "2026-05-30T00:00:00.000Z",
+                "tanggalAcara": "2026-06-10T00:00:00.000Z",
+                "items": [
+                    {
+                        "nama": "Rendang Daging Sapi",
+                        "harga": 55000,
+                        "jumlah": 100
+                    },
+                    {
+                        "nama": "Paket Nasi Box Hemat",
+                        "harga": 25000,
+                        "jumlah": 100
+                    }
+                ],
+                "totalHarga": 8000000,
+                "totalPorsi": 200,
+                "statusPesanan": "dikonfirmasi",
+                "createdAt": "SERVER_TIMESTAMP"
+            },
+            {
+                "__doc_id": "AUTO",
+                "userId": "UID_BUDI (dari users collection)",
+                "namaCustomer": "Budi Santoso",
+                "nomorHp": "081234567803",
+                "alamat": "Jl. Diponegoro No.88, Medan",
+                "catatan": "Minta tambah sambal",
+                "tanggalPemesanan": "2026-06-01T00:00:00.000Z",
+                "tanggalAcara": "2026-06-15T00:00:00.000Z",
+                "items": [
+                    {
+                        "nama": "Ayam Bakar Bumbu Kecap",
+                        "harga": 45000,
+                        "jumlah": 75
+                    },
+                    {
+                        "nama": "Soto Ayam Medan",
+                        "harga": 30000,
+                        "jumlah": 75
+                    }
+                ],
+                "totalHarga": 5625000,
+                "totalPorsi": 150,
+                "statusPesanan": "dikirim",
+                "createdAt": "SERVER_TIMESTAMP"
+            },
+            {
+                "__doc_id": "AUTO",
+                "userId": "UID_DYREN (dari users collection)",
+                "namaCustomer": "Dyren Sihombing",
+                "nomorHp": "081234567801",
+                "alamat": "Jl. Sudirman No.12, Medan",
+                "catatan": "",
+                "tanggalPemesanan": "2026-04-10T00:00:00.000Z",
+                "tanggalAcara": "2026-04-20T00:00:00.000Z",
+                "items": [
+                    {
+                        "nama": "Paket Nasi Box Hemat",
+                        "harga": 25000,
+                        "jumlah": 60
+                    }
+                ],
+                "totalHarga": 1500000,
+                "totalPorsi": 60,
+                "statusPesanan": "selesai",
+                "createdAt": "SERVER_TIMESTAMP"
+            }
+        ],
+        "pembayaran": [
+            {
+                "__doc_id": "AUTO",
+                "pesananId": "ID_PESANAN_1 (dari pesanan collection)",
+                "userId": "UID_DYREN",
+                "namaCustomer": "Dyren Sihombing",
+                "nomorHp": "081234567801",
+                "tanggalBayar": "2026-05-29T00:00:00.000Z",
+                "jenisPembayaran": "dp",
+                "nominal": 1075000,
+                "metodePembayaran": "transfer",
+                "bankEwallet": "BCA",
+                "buktiBayarUrl": "",
+                "status": "menunggu_verifikasi",
+                "createdAt": "SERVER_TIMESTAMP"
+            },
+            {
+                "__doc_id": "AUTO",
+                "pesananId": "ID_PESANAN_2 (dari pesanan collection)",
+                "userId": "UID_RANI",
+                "namaCustomer": "Rani Simanjuntak",
+                "nomorHp": "081234567802",
+                "tanggalBayar": "2026-05-31T00:00:00.000Z",
+                "jenisPembayaran": "lunas",
+                "nominal": 8000000,
+                "metodePembayaran": "transfer",
+                "bankEwallet": "BRI",
+                "buktiBayarUrl": "",
+                "status": "terverifikasi",
+                "createdAt": "SERVER_TIMESTAMP"
+            },
+            {
+                "__doc_id": "AUTO",
+                "pesananId": "ID_PESANAN_3 (dari pesanan collection)",
+                "userId": "UID_BUDI",
+                "namaCustomer": "Budi Santoso",
+                "nomorHp": "081234567803",
+                "tanggalBayar": "2026-06-02T00:00:00.000Z",
+                "jenisPembayaran": "dp",
+                "nominal": 2812500,
+                "metodePembayaran": "ewallet",
+                "bankEwallet": "GoPay",
+                "buktiBayarUrl": "",
+                "status": "menunggu_verifikasi",
+                "createdAt": "SERVER_TIMESTAMP"
+            }
+        ],
+        "pembatalan": [
+            {
+                "__doc_id": "AUTO",
+                "pesananId": "ID_PESANAN_1 (dari pesanan collection)",
+                "userId": "UID_DYREN",
+                "namaCustomer": "Dyren Sihombing",
+                "nomorHp": "081234567801",
+                "alasanPembatalan": "Acara keluarga tiba-tiba dibatalkan",
+                "tanggalPembatalan": "2026-05-30T00:00:00.000Z",
+                "status": "pending",
+                "createdAt": "SERVER_TIMESTAMP"
+            },
+            {
+                "__doc_id": "AUTO",
+                "pesananId": "ID_PESANAN_2 (dari pesanan collection)",
+                "userId": "UID_RANI",
+                "namaCustomer": "Rani Simanjuntak",
+                "nomorHp": "081234567802",
+                "alasanPembatalan": "Jumlah tamu berkurang drastis",
+                "tanggalPembatalan": "2026-06-01T00:00:00.000Z",
+                "status": "disetujui",
+                "createdAt": "SERVER_TIMESTAMP"
+            }
+        ],
+        "notifikasi": [
+            {
+                "__doc_id": "AUTO",
+                "targetUserId": "UID_DYREN",
+                "title": "Pesanan Dikonfirmasi",
+                "message": "Pesanan kamu telah dikonfirmasi oleh admin. Silakan lakukan pembayaran DP.",
+                "type": "pesanan",
+                "isRead": false,
+                "createdAt": "2026-05-29T09:00:00.000Z"
+            },
+            {
+                "__doc_id": "AUTO",
+                "targetUserId": "UID_RANI",
+                "title": "Pembayaran Terverifikasi",
+                "message": "Pembayaran lunas kamu telah terverifikasi. Pesanan siap disiapkan.",
+                "type": "pembayaran",
+                "isRead": true,
+                "createdAt": "2026-05-31T14:30:00.000Z"
+            },
+            {
+                "__doc_id": "AUTO",
+                "targetUserId": "UID_DYREN",
+                "title": "Ingatkan Pelunasan",
+                "message": "Kamu masih memiliki sisa tagihan yang belum dilunasi. Segera lakukan pelunasan.",
+                "type": "tagihan",
+                "isRead": false,
+                "createdAt": "2026-06-01T10:00:00.000Z"
+            }
+        ]
+    },
+    "__schema_fields": {
+        "users": [
+            "uid(docId)",
+            "nama",
+            "email",
+            "noHp",
+            "role",
+            "createdAt"
+        ],
+        "menus": [
+            "nama",
+            "deskripsi",
+            "harga(int)",
+            "kategori",
+            "foto_url",
+            "status",
+            "stok(int)",
+            "createdAt"
+        ],
+        "pesanan": [
+            "userId",
+            "namaCustomer",
+            "nomorHp",
+            "alamat",
+            "catatan",
+            "tanggalPemesanan",
+            "tanggalAcara",
+            "items(array)",
+            "totalHarga(int)",
+            "totalPorsi(int)",
+            "statusPesanan",
+            "createdAt"
+        ],
+        "pembayaran": [
+            "pesananId",
+            "userId",
+            "namaCustomer",
+            "nomorHp",
+            "tanggalBayar",
+            "jenisPembayaran(dp/lunas)",
+            "nominal(int)",
+            "metodePembayaran(transfer/ewallet)",
+            "bankEwallet",
+            "buktiBayarUrl",
+            "status",
+            "createdAt"
+        ],
+        "pembatalan": [
+            "pesananId",
+            "userId",
+            "namaCustomer",
+            "nomorHp",
+            "alasanPembatalan",
+            "tanggalPembatalan",
+            "status(pending/disetujui/ditolak)",
+            "createdAt"
+        ],
+        "notifikasi": [
+            "targetUserId",
+            "title",
+            "message",
+            "type",
+            "isRead(bool)",
+            "createdAt"
+        ]
+    },
+    "__status_values": {
+        "pesanan.statusPesanan": [
+            "menunggu_konfirmasi",
+            "dikonfirmasi",
+            "dikirim",
+            "selesai",
+            "dibatalkan"
+        ],
+        "pembayaran.status": [
+            "menunggu_verifikasi",
+            "terverifikasi",
+            "ditolak"
+        ],
+        "pembatalan.status": [
+            "pending",
+            "disetujui",
+            "ditolak"
+        ],
+        "menus.status": [
+            "aktif",
+            "nonaktif"
+        ],
+        "users.role": [
+            "pelanggan",
+            "admin"
+        ]
+    }
+}

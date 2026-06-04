@@ -180,148 +180,169 @@ class HomeAdminPage extends StatelessWidget {
               Expanded(
                 child: Column(
                   children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const KelolaPembatalanPage(),
-                          ),
-                        );
-                      },
-                      child: _buildMenuTile(
-                        Icons.cancel_outlined,
-                        "Data Pembatalan",
-                        cardBeige,
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const KelolaPembatalanPage(),
+                            ),
+                          );
+                        },
+                        child: _buildMenuTile(
+                          Icons.cancel_outlined,
+                          "Data Pembatalan",
+                          cardBeige,
+                        ),
                       ),
                     ),
 
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const KelolaPelangganPage(),
-                          ),
-                        );
-                      },
-                      child: _buildMenuTile(
-                        Icons.person_outline,
-                        "Data Pelanggan",
-                        cardBeige,
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const KelolaPelangganPage(),
+                            ),
+                          );
+                        },
+                        child: _buildMenuTile(
+                          Icons.person_outline,
+                          "Data Pelanggan",
+                          cardBeige,
+                        ),
                       ),
                     ),
 
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const KelolaMenuPage(),
-                          ),
-                        );
-                      },
-                      child: _buildMenuTile(
-                        Icons.restaurant_menu,
-                        "Data Menu",
-                        cardBeige,
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const KelolaMenuPage(),
+                            ),
+                          );
+                        },
+                        child: _buildMenuTile(
+                          Icons.restaurant_menu,
+                          "Data Menu",
+                          cardBeige,
+                        ),
                       ),
                     ),
 
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const DataPesananPage(),
-                          ),
-                        );
-                      },
-                      child: _buildMenuTile(
-                        Icons.shopping_cart_outlined,
-                        "Data Pesanan",
-                        cardBeige,
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const DataPesananPage(),
+                            ),
+                          );
+                        },
+                        child: _buildMenuTile(
+                          Icons.shopping_cart_outlined,
+                          "Data Pesanan",
+                          cardBeige,
+                        ),
                       ),
                     ),
 
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const KelolaPembayaranPage(),
-                          ),
-                        );
-                      },
-                      child: _buildMenuTile(
-                        Icons.payments_outlined,
-                        "Data Pembayaran",
-                        cardBeige,
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const KelolaPembayaranPage(),
+                            ),
+                          );
+                        },
+                        child: _buildMenuTile(
+                          Icons.payments_outlined,
+                          "Data Pembayaran",
+                          cardBeige,
+                        ),
                       ),
                     ),
 
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LaporanPesananPage(),
-                          ),
-                        );
-                      },
-                      child: _buildMenuTile(
-                        Icons.assessment_outlined,
-                        "Laporan Pemesanan",
-                        cardBeige,
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LaporanPesananPage(),
+                            ),
+                          );
+                        },
+                        child: _buildMenuTile(
+                          Icons.assessment_outlined,
+                          "Laporan Pemesanan",
+                          cardBeige,
+                        ),
                       ),
                     ),
 
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LaporanPembayaranPage(),
-                          ),
-                        );
-                      },
-                      child: _buildMenuTile(
-                        Icons.account_balance_wallet_outlined,
-                        "Laporan Pembayaran",
-                        cardBeige,
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const LaporanPembayaranPage(),
+                            ),
+                          );
+                        },
+                        child: _buildMenuTile(
+                          Icons.account_balance_wallet_outlined,
+                          "Laporan Pembayaran",
+                          cardBeige,
+                        ),
                       ),
                     ),
 
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LaporanPiutangPage(),
-                          ),
-                        );
-                      },
-                      child: _buildMenuTile(
-                        Icons.query_stats,
-                        "Laporan Piutang",
-                        cardBeige,
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LaporanPiutangPage(),
+                            ),
+                          );
+                        },
+                        child: _buildMenuTile(
+                          Icons.query_stats,
+                          "Laporan Piutang",
+                          cardBeige,
+                        ),
                       ),
                     ),
 
                     // ================= LAPORAN KEUANGAN =================
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LaporanKeuanganPage(),
-                          ),
-                        );
-                      },
-                      child: _buildMenuTile(
-                        Icons.assignment_outlined,
-                        "Laporan Keuangan",
-                        cardBeige,
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LaporanKeuanganPage(),
+                            ),
+                          );
+                        },
+                        child: _buildMenuTile(
+                          Icons.assignment_outlined,
+                          "Laporan Keuangan",
+                          cardBeige,
+                        ),
                       ),
                     ),
                   ],
@@ -339,54 +360,52 @@ class HomeAdminPage extends StatelessWidget {
     String title,
     Color color,
   ) {
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.only(
-          bottom: 6,
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 6,
-        ),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(
-                0.04,
-              ),
-              blurRadius: 3,
-              offset: const Offset(0, 1),
-            )
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, size: 20),
+    return Container(
+      margin: const EdgeInsets.only(
+        bottom: 6,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(
+              0.04,
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
+            blurRadius: 3,
+            offset: const Offset(0, 1),
+          )
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 20),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
               ),
             ),
-            const Icon(
-              Icons.chevron_right,
-              size: 18,
-            ),
-          ],
-        ),
+          ),
+          const Icon(
+            Icons.chevron_right,
+            size: 18,
+          ),
+        ],
       ),
     );
   }

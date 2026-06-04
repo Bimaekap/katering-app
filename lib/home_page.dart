@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
+import 'package:flutter_application_1/firebase_service.dart';
 import 'package:flutter_application_1/notifikasi_data.dart';
 import 'package:flutter_application_1/notifikasi_page.dart';
 import 'package:flutter_application_1/profil_page.dart';
@@ -31,60 +34,53 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final TextEditingController searchController = TextEditingController();
 
-  List<Map<String, dynamic>> menuList = [
-    {
-      "image": "assets/ayam_panggang.png",
-      "title": "Ayam Panggang",
-      "desc": "Ayam panggang, dengan nasi, sop, sayur rebusan, dan jus",
-      "price": 35000,
-      "qty": 0,
-    },
-    {
-      "image": "assets/babi_panggang.png",
-      "title": "Babi Panggang",
-      "desc": "Babi panggang, dengan nasi, sop, sayur daun ubi, aqua gelas",
-      "price": 35000,
-      "qty": 0,
-    },
-    {
-      "image": "assets/babi_saksang.png",
-      "title": "Saksang",
-      "desc": "Saksang, dengan nasi, sop, sayur daun ubi, aqua gelas",
-      "price": 35000,
-      "qty": 0,
-    },
-    {
-      "image": "assets/ayam_napinadar.png",
-      "title": "Ayam Napinadar",
-      "desc": "Ayam Napinadar, dengan nasi, sop, sayur rebusan, dan jus",
-      "price": 35000,
-      "qty": 0,
-    },
-    {
-      "image": "assets/ikan_mas_arsik.png",
-      "title": "Ikan Mas Arsik",
-      "desc": "Ikan Mas Arsik, dengan nasi, sop, sayur daun ubi, aqua gelas",
-      "price": 35000,
-      "qty": 0,
-    },
-  ];
-
-  // ================= LIST HASIL FILTER =================
+  // ======= DATA MENU DARI FIRESTORE =======
+  // menuList diisi oleh stream dari koleksi "menus" (status==aktif)
+  // Fields Firestore: nama, deskripsi, harga (int), foto_url, kategori, stok
+  List<Map<String, dynamic>> menuList = [];
   List<Map<String, dynamic>> filteredMenuList = [];
-
   List<Map<String, dynamic>> cartList = [];
+
+  // StreamSubscription untuk menutup stream saat widget di-dispose
+  StreamSubscription<QuerySnapshot>? _menuSubscription;
 
   @override
   void initState() {
     super.initState();
 
-    // awal tampil semua menu
-    filteredMenuList = List.from(menuList);
+    // ======= SUBSCRIBE KE STREAM MENU FIRESTORE =======
+    // Setiap ada perubahan di koleksi "menus", UI otomatis update
+    _menuSubscription = FirebaseService.streamMenusAktif().listen((snapshot) {
+      final data = snapshot.docs.map((doc) {
+        final d = doc.data() as Map<String, dynamic>;
+        return {
+          'id': doc.id,
+          'foto_url': d['foto_url'] ?? '',
+          'title': d['nama'] ?? '',
+          'desc': d['deskripsi'] ?? '',
+          'price': d['harga'] ?? 0,
+          'qty': 0,
+          'stok': d['stok'] ?? 0,
+        };
+      }).toList();
+
+      setState(() {
+        menuList = data;
+        filterMenu(searchController.text);
+      });
+    });
 
     // listener search otomatis
     searchController.addListener(() {
       filterMenu(searchController.text);
     });
+  }
+
+  @override
+  void dispose() {
+    _menuSubscription?.cancel();
+    searchController.dispose();
+    super.dispose();
   }
 
   // ================= FUNGSI SEARCH =================
@@ -487,12 +483,19 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(16),
-                                child: Image.asset(
-                                  item['image'],
-                                  width: 85,
-                                  height: 85,
-                                  fit: BoxFit.cover,
-                                ),
+                                // ======= GAMBAR DARI FIRESTORE (foto_url) =======
+                                // Jika foto_url kosong, tampilkan placeholder
+                                child: item['foto_url'] != null &&
+                                        (item['foto_url'] as String).isNotEmpty
+                                    ? Image.network(
+                                        item['foto_url'],
+                                        width: 85,
+                                        height: 85,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) =>
+                                            _placeholderImage(),
+                                      )
+                                    : _placeholderImage(),
                               ),
 
                               const SizedBox(width: 10),
@@ -583,6 +586,16 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
+    );
+  }
+
+  // ======= PLACEHOLDER IMAGE KETIKA foto_url KOSONG =======
+  Widget _placeholderImage() {
+    return Container(
+      width: 85,
+      height: 85,
+      color: Colors.grey.shade300,
+      child: const Icon(Icons.restaurant, size: 36, color: Colors.grey),
     );
   }
 }

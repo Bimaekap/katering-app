@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/firebase_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -37,15 +38,42 @@ class _TambahMenuPageState extends State<TambahMenuPage> {
     super.dispose();
   }
 
-  // ================= SIMPAN MENU =================
-  void simpanMenu() {
-    final dataMenu = {
-      "nama": namaController.text,
-      "kategori": kategoriController.text,
-      "harga": hargaController.text,
-    };
+  // ================= SIMPAN MENU KE FIRESTORE =================
+  // Dipanggil saat tombol "Simpan Menu" ditekan
+  // Menyimpan dokumen baru ke koleksi "menus" di Firestore
+  void simpanMenu() async {
+    final nama = namaController.text.trim();
+    final kategori = kategoriController.text.trim();
+    final hargaStr = hargaController.text.trim();
 
-    Navigator.pop(context, dataMenu);
+    if (nama.isEmpty || kategori.isEmpty || hargaStr.isEmpty) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nama, kategori, dan harga wajib diisi')),
+      );
+      return;
+    }
+
+    final harga = int.tryParse(hargaStr) ?? 0;
+
+    await FirebaseService.tambahMenu(
+      nama: nama,
+      deskripsi: '',
+      harga: harga,
+      kategori: kategori,
+    );
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Menu berhasil disimpan ke Firestore')),
+    );
+
+    Navigator.pop(context, {
+      "nama": nama,
+      "kategori": kategori,
+      "harga": "Rp. $hargaStr",
+    });
   }
 
   // ================= BATAL =================

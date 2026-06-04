@@ -3,30 +3,19 @@ import 'package:intl/intl.dart';
 import 'transfer_page.dart';
 import 'ewallet_page.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: PaymentPage(
-        totalHarga: 5250000,
-      ),
-    );
-  }
-}
-
 class PaymentPage extends StatefulWidget {
   final int totalHarga;
+  // ======= PARAMETER BARU DARI KERANJANG =======
+  final String pesananId;
+  final String namaCustomer;
+  final String nomorHp;
 
   const PaymentPage({
     super.key,
     required this.totalHarga,
+    required this.pesananId,
+    required this.namaCustomer,
+    required this.nomorHp,
   });
 
   @override
@@ -287,22 +276,36 @@ class _PaymentPageState extends State<PaymentPage> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () {
+                    // Hitung nominal yang akan dibayar
+                    final int nominalBayar = selectedPayment == 'dp'
+                        ? int.tryParse(dpController.text) ?? minimalDp
+                        : widget.totalHarga;
+
                     // KE HALAMAN TRANSFER
                     if (selectedMethod == "bank") {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const TransferBankPage(),
+                          builder: (context) => TransferBankPage(
+                            pesananId: widget.pesananId,
+                            namaCustomer: widget.namaCustomer,
+                            nomorHp: widget.nomorHp,
+                            jenisPembayaran: selectedPayment,
+                            nominal: nominalBayar,
+                          ),
                         ),
                       );
-                    }
-
-
-                    else if (selectedMethod == "ewallet") {
+                    } else if (selectedMethod == "ewallet") {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const EwalletPage(),
+                          builder: (context) => EwalletPage(
+                            pesananId: widget.pesananId,
+                            namaCustomer: widget.namaCustomer,
+                            nomorHp: widget.nomorHp,
+                            jenisPembayaran: selectedPayment,
+                            nominal: nominalBayar,
+                          ),
                         ),
                       );
                     }

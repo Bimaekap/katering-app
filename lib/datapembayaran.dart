@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_application_1/firebase_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -54,89 +56,18 @@ class KelolaPembayaranPage extends StatefulWidget {
 }
 
 class _KelolaPembayaranPageState extends State<KelolaPembayaranPage> {
-  // ================= DATA =================
-  final List<Map<String, dynamic>> pembayaran = [
-    {
-      "no": "1.",
-      "id": "ORD006",
-      "nama": "Yanto",
-      "hp": "08212121121",
-      "tgl": "21-04-2026",
-      "jenis": "DP",
-      "tagihan": "Rp.500.000",
-      "status": "Menunggu Pelunasan",
-      "warna": const Color(0xfff4c16d),
-    },
-    {
-      "no": "2.",
-      "id": "ORD007",
-      "nama": "Mina",
-      "hp": "08212121129",
-      "tgl": "29-03-2026",
-      "jenis": "DP",
-      "tagihan": "Rp.500.000",
-      "status": "Menunggu Pelunasan",
-      "warna": const Color(0xfff4c16d),
-    },
-    {
-      "no": "3.",
-      "id": "ORD008",
-      "nama": "Intan",
-      "hp": "08212121123",
-      "tgl": "19-04-2026",
-      "jenis": "Lunas",
-      "tagihan": "Rp.5.000.000",
-      "status": "Selesai",
-      "warna": const Color(0xff6ddc4f),
-    },
-    {
-      "no": "4.",
-      "id": "ORD009",
-      "nama": "Joko",
-      "hp": "08212121125",
-      "tgl": "19-04-2026",
-      "jenis": "Lunas",
-      "tagihan": "Rp.15.500.000",
-      "status": "Selesai",
-      "warna": const Color(0xff6ddc4f),
-    },
-  ];
-
   // ================= SEARCH CONTROLLER =================
   final TextEditingController searchController = TextEditingController();
+  String searchQuery = '';
 
-  // ================= FILTER DATA =================
-  List<Map<String, dynamic>> filteredPembayaran = [];
+  // ======= DATA PEMBAYARAN DARI FIRESTORE =======
+  // Tidak perlu hardcoded list — pakai StreamBuilder di bawah
 
   @override
   void initState() {
     super.initState();
-
-    filteredPembayaran = pembayaran;
-
     searchController.addListener(() {
-      filterData();
-    });
-  }
-
-  // ================= FUNGSI SEARCH =================
-  void filterData() {
-    String keyword = searchController.text.toLowerCase();
-
-    setState(() {
-      filteredPembayaran = pembayaran.where((
-        item,
-      ) {
-        final nama = item["nama"].toString().toLowerCase();
-
-        final id = item["id"].toString().toLowerCase();
-
-        final status = item["status"].toString().toLowerCase();
-
-        return nama.contains(keyword) ||
-            id.contains(keyword) ||
-            status.contains(keyword);
-      }).toList();
+      setState(() => searchQuery = searchController.text);
     });
   }
 
@@ -428,172 +359,194 @@ class _KelolaPembayaranPageState extends State<KelolaPembayaranPage> {
 
                         const SizedBox(height: 6),
 
-                        // ================= DATA TABLE =================
+                        // ======= DATA PEMBAYARAN REALTIME DARI FIRESTORE =======
                         Expanded(
-                          child: ListView.builder(
-                            itemCount: filteredPembayaran.length,
-                            itemBuilder: (context, index) {
-                              final item = filteredPembayaran[index];
+                          child: StreamBuilder<QuerySnapshot>(
+                            stream: FirebaseService.streamSemuaPembayaran(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              }
+                              if (!snapshot.hasData ||
+                                  snapshot.data!.docs.isEmpty) {
+                                return const Center(
+                                    child: Text('Belum ada data pembayaran'));
+                              }
 
-                              return Container(
-                                margin: const EdgeInsets.only(
-                                  bottom: 8,
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xffd9dede),
-                                  borderRadius: BorderRadius.circular(
-                                    8,
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    TableCellWidget(
-                                      text: item["no"],
-                                      width: 35,
+                              final docs = snapshot.data!.docs.where((doc) {
+                                final d = doc.data() as Map<String, dynamic>;
+                                final nama = (d['namaCustomer'] ?? '')
+                                    .toString()
+                                    .toLowerCase();
+                                final status = (d['status'] ?? '')
+                                    .toString()
+                                    .toLowerCase();
+                                final q = searchQuery.toLowerCase();
+                                return q.isEmpty ||
+                                    nama.contains(q) ||
+                                    status.contains(q) ||
+                                    doc.id.toLowerCase().contains(q);
+                              }).toList();
+
+                              return ListView.builder(
+                                itemCount: docs.length,
+                                itemBuilder: (context, index) {
+                                  final doc = docs[index];
+                                  final item =
+                                      doc.data() as Map<String, dynamic>;
+                                  final isDP = item['jenisPembayaran'] == 'dp';
+                                  final statusTxt =
+                                      item['status'] ?? 'menunggu_verifikasi';
+                                  Color warna = statusTxt.contains('menunggu')
+                                      ? const Color(0xfff4c16d)
+                                      : const Color(0xff6ddc4f);
+
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xffd9dede),
+                                      borderRadius: BorderRadius.circular(8),
                                     ),
-
-                                    TableCellWidget(
-                                      text: item["id"],
-                                      width: 80,
-                                      bold: true,
-                                    ),
-
-                                    SizedBox(
-                                      width: 110,
-                                      child: Column(
-                                        children: [
-                                          Text(
-                                            item["nama"],
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 11,
-                                            ),
-                                          ),
-                                          Text(
-                                            item["hp"],
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 10,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-
-                                    TableCellWidget(
-                                      text: item["tgl"],
-                                      width: 85,
-                                      bold: true,
-                                    ),
-
-                                    TableCellWidget(
-                                      text: item["jenis"],
-                                      width: 55,
-                                    ),
-
-                                    TableCellWidget(
-                                      text: item["tagihan"],
-                                      width: 110,
-                                      bold: true,
-                                    ),
-
-                                    // ================= AKSI =================
-                                    SizedBox(
-                                      width: 145,
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: item["warna"],
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                4,
+                                    child: Row(
+                                      children: [
+                                        TableCellWidget(
+                                            text: '${index + 1}.', width: 35),
+                                        TableCellWidget(
+                                            text: doc.id
+                                                .substring(0, 6)
+                                                .toUpperCase(),
+                                            width: 80,
+                                            bold: true),
+                                        SizedBox(
+                                          width: 110,
+                                          child: Column(
+                                            children: [
+                                              Text(
+                                                item['namaCustomer'] ?? '',
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 11),
                                               ),
-                                            ),
-                                            child: Text(
-                                              item["status"],
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 9,
-                                                fontWeight: FontWeight.bold,
+                                              Text(
+                                                item['nomorHp'] ?? '',
+                                                style: const TextStyle(
+                                                    fontSize: 10),
                                               ),
-                                            ),
+                                            ],
                                           ),
-
-                                          const SizedBox(
-                                            height: 6,
-                                          ),
-
-                                          // ================= TOMBOL INGATKAN =================
-                                          item["jenis"] == "DP"
-                                              ? InkWell(
-                                                  onTap: () {
-                                                    kirimNotifikasi(
-                                                      item,
-                                                    );
-                                                  },
-                                                  child: Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    children: const [
-                                                      Icon(
-                                                        Icons
-                                                            .notifications_active,
-                                                        color: Colors.red,
-                                                        size: 15,
-                                                      ),
-                                                      SizedBox(
-                                                        width: 5,
-                                                      ),
-                                                      Text(
-                                                        "Ingatkan",
-                                                        style: TextStyle(
-                                                          color:
-                                                              Color(0xff2342b8),
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 10,
-                                                        ),
-                                                      )
-                                                    ],
-                                                  ),
-                                                )
-                                              : Row(
+                                        ),
+                                        TableCellWidget(
+                                            text: item['tanggalBayar'] != null
+                                                ? (item['tanggalBayar']
+                                                        as Timestamp)
+                                                    .toDate()
+                                                    .toString()
+                                                    .substring(0, 10)
+                                                : '-',
+                                            width: 85,
+                                            bold: true),
+                                        TableCellWidget(
+                                            text: isDP ? 'DP' : 'Lunas',
+                                            width: 55),
+                                        TableCellWidget(
+                                            text: 'Rp.${item['nominal'] ?? 0}',
+                                            width: 110,
+                                            bold: true),
+                                        // ======= AKSI: VERIFIKASI / INGATKAN =======
+                                        SizedBox(
+                                          width: 145,
+                                          child: Column(
+                                            children: [
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: warna,
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                ),
+                                                child: Text(
+                                                  statusTxt,
+                                                  style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 9,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 6),
+                                              if (statusTxt
+                                                  .contains('menunggu'))
+                                                Row(
                                                   mainAxisAlignment:
                                                       MainAxisAlignment.center,
-                                                  children: const [
-                                                    Icon(
-                                                      Icons.check_circle,
-                                                      color: Colors.green,
-                                                      size: 15,
-                                                    ),
-                                                    SizedBox(
-                                                      width: 5,
-                                                    ),
-                                                    Text(
-                                                      "Lunas",
-                                                      style: TextStyle(
-                                                        color: Colors.green,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 10,
+                                                  children: [
+                                                    InkWell(
+                                                      onTap: () async {
+                                                        // ======= VERIFIKASI PEMBAYARAN =======
+                                                        await FirebaseService
+                                                            .updateStatusPembayaran(
+                                                                doc.id,
+                                                                'terverifikasi');
+                                                      },
+                                                      child: const Text(
+                                                        'Verifikasi',
+                                                        style: TextStyle(
+                                                            color: Colors.green,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            fontSize: 10),
                                                       ),
-                                                    )
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    InkWell(
+                                                      onTap: () async {
+                                                        await FirebaseService
+                                                            .updateStatusPembayaran(
+                                                                doc.id,
+                                                                'ditolak');
+                                                      },
+                                                      child: const Text(
+                                                        'Tolak',
+                                                        style: TextStyle(
+                                                            color: Colors.red,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            fontSize: 10),
+                                                      ),
+                                                    ),
                                                   ],
                                                 )
-                                        ],
-                                      ),
-                                    )
-                                  ],
-                                ),
+                                              else
+                                                const Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Icon(Icons.check_circle,
+                                                        color: Colors.green,
+                                                        size: 15),
+                                                    SizedBox(width: 5),
+                                                    Text('Lunas',
+                                                        style: TextStyle(
+                                                            color: Colors.green,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            fontSize: 10)),
+                                                  ],
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
                               );
                             },
                           ),
@@ -607,22 +560,20 @@ class _KelolaPembayaranPageState extends State<KelolaPembayaranPage> {
                           ),
                           decoration: BoxDecoration(
                             color: const Color(0xffd9dede),
-                            borderRadius: BorderRadius.circular(
-                              8,
-                            ),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Row(
+                          child: const Row(
                             children: [
                               Text(
-                                "Menampilkan ${filteredPembayaran.length} data",
-                                style: const TextStyle(
+                                "Data Pembayaran (realtime)",
+                                style: TextStyle(
                                   color: Colors.grey,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 10,
                                 ),
                               ),
-                              const Spacer(),
-                              const Text(
+                              Spacer(),
+                              Text(
                                 "Selanjutnya >",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,

@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/detailpesanan_page.dart';
 import 'package:flutter_application_1/home_page.dart';
 import 'package:flutter_application_1/profil_page.dart';
+import 'firebase_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -27,29 +29,9 @@ class RiwayatPage extends StatefulWidget {
 }
 
 class _RiwayatPageState extends State<RiwayatPage> {
-  // DATA PESANAN
-  final List<Map<String, dynamic>> riwayatPesanan = [
-    {
-      "title": "2 Menu",
-      "date": DateTime.now(),
-    },
-    {
-      "title": "1 Menu",
-      "date": DateTime.now().subtract(
-        const Duration(days: 3),
-      ),
-    },
-    {
-      "title": "3 Menu",
-      "date": DateTime.now().subtract(
-        const Duration(days: 15),
-      ),
-    },
-  ];
-
   // FORMAT BULAN
   String getNamaBulan(int month) {
-    List<String> bulan = [
+    const bulan = [
       "",
       "Januari",
       "Februari",
@@ -62,9 +44,8 @@ class _RiwayatPageState extends State<RiwayatPage> {
       "September",
       "Oktober",
       "November",
-      "Desember",
+      "Desember"
     ];
-
     return bulan[month];
   }
 
@@ -207,137 +188,124 @@ class _RiwayatPageState extends State<RiwayatPage> {
               ),
             ),
 
-            // ================= LIST RIWAYAT =================
+            // ================= LIST RIWAYAT (FIRESTORE REALTIME) =================
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-                itemCount: riwayatPesanan.length,
-                itemBuilder: (context, index) {
-                  final item = riwayatPesanan[index];
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseService.streamPesananUser(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(
+                        child: Text('Belum ada riwayat pesanan'));
+                  }
 
-                  DateTime tanggal = item['date'];
+                  final docs = snapshot.data!.docs;
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ================= NAMA BULAN =================
-                      if (index == 0 ||
-                          riwayatPesanan[index - 1]['date'].month !=
-                              tanggal.month)
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            left: 10,
-                            top: 10,
-                            bottom: 10,
-                          ),
-                          child: Text(
-                            getNamaBulan(tanggal.month),
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    itemCount: docs.length,
+                    itemBuilder: (context, index) {
+                      final item = docs[index].data() as Map<String, dynamic>;
+                      final DateTime tanggal = item['createdAt'] != null
+                          ? (item['createdAt'] as Timestamp).toDate()
+                          : DateTime.now();
+                      final items = item['items'] as List<dynamic>? ?? [];
+                      final title = '${items.length} Menu';
 
-                      // ================= CARD RIWAYAT =================
-                      GestureDetector(
-                        onTap: () {
-                          // NAVIGATOR KE DETAIL PESANAN
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const DetailPesananPage(),
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ================= NAMA BULAN =================
+                          if (index == 0 ||
+                              (docs[index - 1].data()
+                                      as Map<String, dynamic>)['createdAt'] ==
+                                  null ||
+                              ((docs[index - 1].data() as Map<String, dynamic>)[
+                                          'createdAt'] as Timestamp)
+                                      .toDate()
+                                      .month !=
+                                  tanggal.month)
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 10, top: 10, bottom: 10),
+                              child: Text(getNamaBulan(tanggal.month),
+                                  style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold)),
                             ),
-                          );
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(
-                            bottom: 14,
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 16,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(
-                              16,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(
-                                  0.05,
-                                ),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
+
+                          // ================= CARD RIWAYAT =================
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => DetailPesananPage(
+                                          pesananId: docs[index].id,
+                                          pesananData: item)));
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 14),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 18, vertical: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4))
+                                ],
                               ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              // ================= ICON =================
-                              Container(
-                                width: 50,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: const Color(
-                                    0xFFE8F5E9,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 50,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                        color: const Color(0xFFE8F5E9),
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                    child: const Icon(Icons.fastfood,
+                                        color: Colors.green, size: 28),
                                   ),
-                                  borderRadius: BorderRadius.circular(
-                                    12,
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(title,
+                                            style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold)),
+                                        const SizedBox(height: 4),
+                                        Text(formatTanggal(tanggal),
+                                            style: TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.grey.shade600)),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                            'Status: ${item['statusPesanan'] ?? '-'}',
+                                            style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.blueGrey)),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                child: const Icon(
-                                  Icons.fastfood,
-                                  color: Colors.green,
-                                  size: 28,
-                                ),
+                                  const Icon(Icons.chevron_right,
+                                      size: 28, color: Colors.black54),
+                                ],
                               ),
-
-                              const SizedBox(width: 14),
-
-                              // ================= TEXT =================
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // TITLE
-                                    Text(
-                                      item['title'],
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-
-                                    const SizedBox(height: 4),
-
-                                    // TANGGAL
-                                    Text(
-                                      formatTanggal(tanggal),
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              // ================= ARROW =================
-                              const Icon(
-                                Icons.chevron_right,
-                                size: 28,
-                                color: Colors.black54,
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
-                    ],
+                        ],
+                      );
+                    },
                   );
                 },
               ),

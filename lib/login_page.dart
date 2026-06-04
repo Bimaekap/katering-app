@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Welcome.dart';
+import 'package:flutter_application_1/firebase_service.dart';
 import 'package:flutter_application_1/loginadmin_page.dart';
 import 'forgetpassword_page.dart';
 import 'home_page.dart';
@@ -226,13 +227,42 @@ class _LoginPageState extends State<LoginPage> {
                 width: double.infinity,
                 height: 65,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const HomePage(),
-                      ),
+                  onPressed: () async {
+                    final email = emailController.text.trim();
+                    final password = passwordController.text.trim();
+
+                    if (email.isEmpty || password.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Email dan password wajib diisi')),
+                      );
+                      return;
+                    }
+
+                    // ======= LOGIN VIA FIREBASE AUTH =======
+                    // Memvalidasi email+password dan cek role='pelanggan'
+                    final result = await FirebaseService.loginPelanggan(
+                      email: email,
+                      password: password,
                     );
+
+                    if (!mounted) return;
+
+                    if (result['success'] == true) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HomePage(),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(result['message'] ?? 'Login gagal'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2340C7),

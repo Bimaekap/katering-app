@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/login_page.dart';
 import 'register_page.dart';
+import 'seed_data_page.dart'; // ← SEED DATA (hapus import ini setelah selesai)
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -97,7 +98,8 @@ class WelcomePage extends StatelessWidget {
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromARGB(255, 52, 187, 224),
+                            backgroundColor:
+                                const Color.fromARGB(255, 52, 187, 224),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
                             ),
@@ -117,6 +119,15 @@ class WelcomePage extends StatelessWidget {
                 ),
 
                 SizedBox(height: size.height * 0.07),
+
+                // ===== TOMBOL SEED DATA (HAPUS SETELAH TESTING) =====
+                TextButton.icon(
+                  onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const SeedDataPage())),
+                  icon: const Icon(Icons.storage, size: 14, color: Colors.grey),
+                  label: const Text('Dev: Isi Data Testing',
+                      style: TextStyle(fontSize: 11, color: Colors.grey)),
+                ),
               ],
             ),
           ),

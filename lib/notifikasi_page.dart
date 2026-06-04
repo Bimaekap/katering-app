@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_application_1/firebase_service.dart';
 
 class NotificationPage extends StatelessWidget {
   const NotificationPage({super.key});
@@ -22,33 +24,42 @@ class NotificationPage extends StatelessWidget {
           color: Colors.black,
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // ================= NOTIFIKASI 1 =================
-          buildNotificationCard(
-            icon: Icons.access_time_filled,
-            iconColor: Colors.orange,
-            iconBg: Colors.orange.shade100,
-            title: "Pesanan Sedang Diproses",
-            message: "Pesanan Anda sedang diproses oleh admin. "
-                "Silakan menunggu maksimal 1x24 jam untuk konfirmasi.",
-            time: "Baru saja",
-          ),
-
-          const SizedBox(height: 14),
-
-          // ================= NOTIFIKASI 2 =================
-          buildNotificationCard(
-            icon: Icons.cancel,
-            iconColor: Colors.red,
-            iconBg: Colors.red.shade100,
-            title: "Pembatalan Sedang Diproses",
-            message: "Pembatalan pesanan Anda sedang diproses admin. "
-                "Silakan menunggu konfirmasi maksimal 1x24 jam.",
-            time: "Baru saja",
-          ),
-        ],
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseService.streamNotifikasiUser(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: const [Center(child: Text('Belum ada notifikasi'))],
+            );
+          }
+          final docs = snapshot.data!.docs;
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: docs.length,
+            itemBuilder: (context, index) {
+              final d = docs[index].data() as Map<String, dynamic>;
+              return Column(
+                children: [
+                  buildNotificationCard(
+                    icon: Icons.notifications,
+                    iconColor: Colors.blue,
+                    iconBg: Colors.blue.shade100,
+                    title: d['title'] ?? '-',
+                    message: d['message'] ?? '-',
+                    time: d['createdAt'] != null
+                        ? (d['createdAt'] as Timestamp).toDate().toString()
+                        : 'Baru saja',
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              );
+            },
+          );
+        },
       ),
     );
   }
